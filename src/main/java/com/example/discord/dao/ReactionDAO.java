@@ -64,4 +64,46 @@ public class ReactionDAO {
             return false;
         }
     }
+
+    public boolean addReaction(String nomUtilisateur, int idMessage, String typeReaction) {
+        String sql = "INSERT INTO reaction (nomutilisateur, idmessage, typereaction) VALUES (?, ?, ?)";
+
+        try (Connection conn = ConnexionBD.getConnexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, nomUtilisateur);
+            stmt.setInt(2, idMessage);
+            stmt.setString(3, typeReaction);
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.out.println("Erreur insert reaction : " + e.getMessage());
+            return false;
+        }
+    }
+
+    public List<Reaction> getReactionsForMessage(int idMessage) {
+        List<Reaction> reactions = new ArrayList<>();
+
+        String sql = "SELECT nomutilisateur, typereaction FROM reaction WHERE idmessage = ?";
+        try (Connection conn = ConnexionBD.getConnexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idMessage);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Reaction r = new Reaction();
+                r.setNomUtilisateur(rs.getString("nomutilisateur"));
+                r.setTypeReaction(rs.getString("typereaction"));
+                r.setIdMessage(idMessage);
+                reactions.add(r);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Erreur getReactionsForMessage : " + e.getMessage());
+        }
+
+        return reactions;
+    }
 }

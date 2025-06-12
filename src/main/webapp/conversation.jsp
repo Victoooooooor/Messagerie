@@ -50,15 +50,59 @@
                 }
 
                 messages.forEach(msg => {
-                    console.log("Message reçu :", msg);  // debug
-
                     const item = document.createElement("div");
                     item.className = "list-group-item";
+
                     item.innerHTML =
                         '<strong>' + (msg.nomUtilisateur || "Inconnu") + '</strong>' +
                         '<small class="text-muted float-end">' + (msg.time_ || "?") + '</small><br>' +
-                        (msg.contenu || "");
+                        (msg.contenu || "") +
+                        '<div class="mt-2 reactions" id="reactions-' + msg.idMessage + '"></div>' + // les réactions seront insérées ici
+                        '<div class="mt-2">' +
+                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="like">👍</button>' +
+                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="love">❤️</button>' +
+                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="funny">😂</button>' +
+                        '</div>';
+
                     container.appendChild(item);
+                    fetch(contextPath + "/reactions?idMessage=" + msg.idMessage)
+                        .then(response => response.json())
+                        .then(reactions => {
+                            const reactionsDiv = document.getElementById("reactions-" + msg.idMessage);
+                            reactions.forEach(r => {
+                                const emoji = r.typeReaction === "like" ? "👍" :
+                                    r.typeReaction === "love" ? "❤️" :
+                                        r.typeReaction === "funny" ? "😂" : "";
+                                const span = document.createElement("span");
+                                span.className = "badge bg-light text-dark me-1";
+                                span.innerText = emoji + " " + r.nomUtilisateur;
+                                reactionsDiv.appendChild(span);
+                            });
+                        });
+                });
+
+                // Ajout des listeners de réactions
+                document.querySelectorAll(".reaction-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const idMessage = btn.dataset.id;
+                        const typeReaction = btn.dataset.reaction;
+
+                        fetch(contextPath + "/reactions", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                idMessage: parseInt(idMessage),
+                                typeReaction: typeReaction
+                            })
+                        })
+                            .then(response => {
+                                if (!response.ok) throw new Error("Erreur lors de la réaction.");
+                                alert("Réaction envoyée !");
+                            })
+                            .catch(err => {
+                                alert("Erreur : " + err.message);
+                            });
+                    });
                 });
             })
             .catch(error => {
