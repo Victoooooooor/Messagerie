@@ -131,4 +131,19 @@ public class UtilisateurDAO {
         return null;
     }
 
+    public boolean exists(String nomUtilisateur) {
+        String sql = "SELECT 1 FROM Utilisateur WHERE NomUtilisateur = ?";
+
+        try (Connection conn = ConnexionBD.getConnexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, nomUtilisateur);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            System.out.println("Erreur exists Utilisateur : " + e.getMessage());
+            return false;
+        }
+    }
+
 }

@@ -119,7 +119,7 @@
             });
     });
 
-    // Script conversation directe
+    // Accès à une conversation directe
     document.getElementById("conversationForm").addEventListener("submit", function (e) {
         e.preventDefault();
         const from = document.getElementById("from").value.trim();
@@ -127,16 +127,29 @@
         const alertDiv = document.getElementById("errorAlert");
         alertDiv.innerHTML = "";
 
-        if (from !== currentUser && to !== currentUser) {
+        if (from !== currentUser) {
             alertDiv.innerHTML = `
                 <div class="alert alert-danger text-center" role="alert">
                     Vous n'êtes pas autorisé à accéder à cette conversation.
-                </div>
-            `;
+                </div>`;
             return;
         }
 
-        window.location.href = "conversation.jsp?from=" + encodeURIComponent(from) + "&to=" + encodeURIComponent(to);
+        // Vérifie que l'utilisateur existe avant redirection
+        fetch(contextPath + "/utilisateur-existe?nom=" + encodeURIComponent(to))
+            .then(response => {
+                if (!response.ok) throw new Error("notfound");
+                return response.text();
+            })
+            .then(() => {
+                window.location.href = "conversation.jsp?from=" + encodeURIComponent(from) + "&to=" + encodeURIComponent(to);
+            })
+            .catch(() => {
+                alertDiv.innerHTML = `
+                    <div class="alert alert-danger text-center" role="alert">
+                        Il n'existe pas d'utilisateur à ce nom.
+                    </div>`;
+            });
     });
 </script>
 
