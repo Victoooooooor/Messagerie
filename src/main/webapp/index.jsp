@@ -1,6 +1,14 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
     String contextPath = request.getContextPath();
+    Object utilisateur = session.getAttribute("utilisateur");
+
+    if (utilisateur == null) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+
+    String nomUtilisateur = ((com.example.discord.model.Utilisateur) utilisateur).getNomUtilisateur();
 %>
 <html>
 <head>
@@ -10,13 +18,30 @@
 <body class="bg-light">
 <div class="container py-5">
 
-    <h1 class="mb-4 text-center">Mini Discord</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Mini Discord</h1>
+        <div class="text-end">
+            Connecté en tant que <strong><%= nomUtilisateur %></strong>
+            <a href="logout" class="btn btn-sm btn-outline-danger ms-2">Déconnexion</a>
+        </div>
+    </div>
 
     <!-- Zone pour les erreurs -->
     <div id="errorAlert" class="mb-4"></div>
 
-    <div class="row g-4">
+    <% if ("1".equals(request.getParameter("unauthorized"))) { %>
+    <div class="alert alert-danger text-center" role="alert">
+        Vous n'êtes pas autorisé à accéder à cette conversation.
+    </div>
+    <% } %>
 
+    <% if ("1".equals(request.getParameter("unauthorizedCanal"))) { %>
+    <div class="alert alert-danger text-center" role="alert">
+        Vous n'êtes pas autorisé à accéder à ce canal.
+    </div>
+    <% } %>
+
+    <div class="row g-4">
         <!-- Formulaire canal -->
         <div class="col-md-6">
             <div class="card shadow-sm">
@@ -33,12 +58,12 @@
             </div>
         </div>
 
-        <!-- Formulaire conversation -->
+        <!-- Formulaire conversation directe -->
         <div class="col-md-6">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">Accéder à une conversation directe</h5>
-                    <form action="conversation.jsp" method="get">
+                    <form id="conversationForm">
                         <div class="mb-3">
                             <label for="from" class="form-label">Utilisateur 1</label>
                             <input type="text" id="from" name="from" class="form-control" required>
@@ -62,17 +87,16 @@
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
-<!-- Script pour valider l'existence du canal -->
+<!-- Script canal -->
 <script>
-    const contextPath = "<%= request.getContextPath() %>";
+    const contextPath = "<%= contextPath %>";
+    const currentUser = "<%= nomUtilisateur %>";
 
     document.getElementById("canalForm").addEventListener("submit", function (e) {
         e.preventDefault();
-
         const canal = document.getElementById("canal").value.trim();
         const alertDiv = document.getElementById("errorAlert");
         alertDiv.innerHTML = "";
@@ -80,22 +104,49 @@
         fetch(contextPath + "/messages?canal=" + encodeURIComponent(canal))
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(); // on ignore volontairement le contenu exact de l'erreur
+                    if (response.status === 403) {
+                        throw new Error("unauthorized");
+                    }
+                    throw new Error("notfound");
                 }
                 return response.json();
             })
             .then(() => {
-                // Le canal existe, on redirige
                 window.location.href = "canal.jsp?canal=" + encodeURIComponent(canal);
             })
-            .catch(() => {
-                // Affichage propre et fixe
-                alertDiv.innerHTML = `
-                    <div class="alert alert-danger text-center" role="alert">
-                        Aucun canal avec ce nom n'existe.
-                    </div>
-                `;
+            .catch(err => {
+                if (err.message === "unauthorized") {
+                    alertDiv.innerHTML = `
+                <div class="alert alert-danger text-center" role="alert">
+                    Vous n'êtes pas autorisé à accéder à ce canal.
+                </div>`;
+                } else {
+                    alertDiv.innerHTML = `
+                <div class="alert alert-danger text-center" role="alert">
+                    Aucun canal avec ce nom n'existe.
+                </div>`;
+                }
             });
+    });
+
+    // Script conversation directe
+    document.getElementById("conversationForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const from = document.getElementById("from").value.trim();
+        const to = document.getElementById("to").value.trim();
+        const alertDiv = document.getElementById("errorAlert");
+        alertDiv.innerHTML = "";
+
+        if (from !== currentUser && to !== currentUser) {
+            alertDiv.innerHTML = `
+                <div class="alert alert-danger text-center" role="alert">
+                    Vous n'êtes pas autorisé à accéder à cette conversation.
+                </div>
+            `;
+            return;
+        }
+
+        window.location.href = "conversation.jsp?from=" + encodeURIComponent(from) + "&to=" + encodeURIComponent(to);
     });
 </script>
 
