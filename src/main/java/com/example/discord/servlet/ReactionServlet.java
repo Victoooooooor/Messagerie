@@ -5,7 +5,6 @@ import com.example.discord.model.Reaction;
 import com.example.discord.model.Utilisateur;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,7 +35,7 @@ public class ReactionServlet extends HttpServlet {
             int idMessage = (int) data.get("idMessage");
             String type = (String) data.get("typeReaction");
 
-            boolean success = reactionDAO.addReaction(user.getNomUtilisateur(), idMessage, type);
+            boolean success = reactionDAO.upsertReaction(user.getNomUtilisateur(), idMessage, type);
 
             if (success) {
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -55,6 +54,6 @@ public class ReactionServlet extends HttpServlet {
         List<Reaction> reactions = reactionDAO.getReactionsForMessage(idMessage);
 
         resp.setContentType("application/json");
-        new ObjectMapper().writeValue(resp.getWriter(), reactions);
+        mapper.writeValue(resp.getWriter(), reactions);
     }
 }

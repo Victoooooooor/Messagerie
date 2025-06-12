@@ -106,4 +106,55 @@ public class ReactionDAO {
 
         return reactions;
     }
+
+    public String getExistingReactionType(String nomUtilisateur, int idMessage) {
+        String sql = "SELECT typeReaction FROM Reaction WHERE nomUtilisateur = ? AND idMessage = ?";
+        try (Connection conn = ConnexionBD.getConnexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, nomUtilisateur);
+            stmt.setInt(2, idMessage);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString("typeReaction");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Erreur getExistingReactionType : " + e.getMessage());
+        }
+
+        return null; // aucune réaction existante
+    }
+
+    public boolean upsertReaction(String nomUtilisateur, int idMessage, String typeReaction) {
+        String existing = getExistingReactionType(nomUtilisateur, idMessage);
+
+        if (existing == null) {
+            // aucune réaction → insérer
+            return addReaction(nomUtilisateur, idMessage, typeReaction);
+        } else if (existing.equals(typeReaction)) {
+            // même réaction cliquée → supprimer
+            return delete(nomUtilisateur, idMessage);
+        } else {
+            // autre réaction → mettre à jour
+            return updateReaction(nomUtilisateur, idMessage, typeReaction);
+        }
+    }
+
+    public boolean updateReaction(String nomUtilisateur, int idMessage, String newType) {
+        String sql = "UPDATE Reaction SET typeReaction = ? WHERE nomUtilisateur = ? AND idMessage = ?";
+        try (Connection conn = ConnexionBD.getConnexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, newType);
+            stmt.setString(2, nomUtilisateur);
+            stmt.setInt(3, idMessage);
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.out.println("Erreur updateReaction : " + e.getMessage());
+            return false;
+        }
+    }
 }

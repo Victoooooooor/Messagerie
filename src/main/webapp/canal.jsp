@@ -95,7 +95,26 @@
                         })
                             .then(response => {
                                 if (!response.ok) throw new Error("Erreur lors de la réaction.");
-                                location.reload();
+                                return response.text(); // Optionnel, ou .json() si tu veux retourner une info serveur
+                            })
+                            .then(() => {
+                                // Recharge la liste des réactions pour ce message uniquement :
+                                fetch(contextPath + "/reactions?idMessage=" + idMessage)
+                                    .then(response => response.json())
+                                    .then(reactions => {
+                                        const reactionsDiv = document.getElementById("reactions-" + idMessage);
+                                        reactionsDiv.innerHTML = ""; // reset
+
+                                        reactions.forEach(r => {
+                                            const emoji = r.typeReaction === "like" ? "👍" :
+                                                r.typeReaction === "love" ? "❤️" :
+                                                    r.typeReaction === "funny" ? "😂" : "";
+                                            const span = document.createElement("span");
+                                            span.className = "badge bg-light text-dark me-1";
+                                            span.innerText = emoji + " " + r.nomUtilisateur;
+                                            reactionsDiv.appendChild(span);
+                                        });
+                                    });
                             })
                             .catch(err => {
                                 alert("Erreur : " + err.message);
