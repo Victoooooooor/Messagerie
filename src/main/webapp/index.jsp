@@ -64,14 +64,14 @@
                 <div class="card-body">
                     <h5 class="card-title">Accéder à une conversation directe</h5>
                     <form id="conversationForm">
+                        <!-- Champ caché avec utilisateur connecté -->
+                        <input type="hidden" id="from" name="from" value="<%= nomUtilisateur %>">
+
                         <div class="mb-3">
-                            <label for="from" class="form-label">Utilisateur 1</label>
-                            <input type="text" id="from" name="from" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="to" class="form-label">Utilisateur 2</label>
+                            <label for="to" class="form-label">Utilisateur destinataire</label>
                             <input type="text" id="to" name="to" class="form-control" required>
                         </div>
+
                         <button type="submit" class="btn btn-success">Voir la conversation</button>
                     </form>
                 </div>
