@@ -3,6 +3,7 @@ package com.example.discord.dao;
 import com.example.discord.model.Message;
 import com.example.discord.util.ConnexionBD;
 
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,7 @@ public class MessageDAO {
                 Message m = new Message();
                 m.setIdMessage(rs.getInt("IdMessage"));
                 m.setContenu(rs.getString("contenu"));
-                m.setTime_(rs.getString("time_"));
+                m.setTime_(rs.getTime("time_"));
                 m.setNomUtilisateur(rs.getString("NomUtilisateur"));
                 m.setNomCanal(rs.getString("NomCanal"));
                 result.add(m);
@@ -35,16 +36,22 @@ public class MessageDAO {
     }
 
     public boolean insert(Message msg) {
-        String sql = "INSERT INTO Message (IdMessage, contenu, time_, NomUtilisateur, NomCanal) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Message (contenu, time_, NomUtilisateur, NomUtilisateur_1, NomUtilisateur_2, NomCanal) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConnexionBD.getConnexion();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, msg.getIdMessage());
-            stmt.setString(2, msg.getContenu());
-            stmt.setString(3, msg.getTime_());
-            stmt.setString(4, msg.getNomUtilisateur());
-            stmt.setString(5, msg.getNomCanal());
+            stmt.setString(1, msg.getContenu());
+            stmt.setTime(2, msg.getTime_());
+            stmt.setString(3, msg.getNomUtilisateur());
+            stmt.setString(4, msg.getNomUtilisateur1());
+            stmt.setString(5, msg.getNomUtilisateur2());
+
+            if (msg.getNomCanal() == null) {
+                stmt.setNull(6, java.sql.Types.VARCHAR);
+            } else {
+                stmt.setString(6, msg.getNomCanal());
+            }
 
             return stmt.executeUpdate() > 0;
 
@@ -76,9 +83,14 @@ public class MessageDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, msg.getContenu());
-            stmt.setString(2, msg.getTime_());
+            stmt.setTime(2, msg.getTime_());
             stmt.setString(3, msg.getNomUtilisateur());
-            stmt.setString(4, msg.getNomCanal());
+            if (msg.getNomCanal() == null) {
+                stmt.setNull(4, java.sql.Types.VARCHAR);
+            } else {
+                stmt.setString(4, msg.getNomCanal());
+            }
+
             stmt.setInt(5, msg.getIdMessage());
 
             return stmt.executeUpdate() > 0;
@@ -103,7 +115,7 @@ public class MessageDAO {
                 Message m = new Message();
                 m.setIdMessage(rs.getInt("IdMessage"));
                 m.setContenu(rs.getString("contenu"));
-                m.setTime_(rs.getString("time_"));
+                m.setTime_(rs.getTime("time_"));
                 m.setNomUtilisateur(rs.getString("NomUtilisateur"));
                 m.setNomCanal(rs.getString("NomCanal"));
                 messages.add(m);
@@ -138,7 +150,7 @@ public class MessageDAO {
                 Message msg = new Message();
                 msg.setIdMessage(rs.getInt("IdMessage"));
                 msg.setContenu(rs.getString("contenu"));
-                msg.setTime_(rs.getString("time_"));
+                msg.setTime_(rs.getTime("time_"));
                 msg.setNomUtilisateur(rs.getString("NomUtilisateur"));
                 msg.setNomCanal(rs.getString("NomCanal"));
                 messages.add(msg);

@@ -72,24 +72,27 @@
         e.preventDefault();
 
         const type = typeSelect.value;
+        const nomUtilisateur = document.getElementById("nomUtilisateur").value;
+
         const data = {
             contenu: document.getElementById("contenu").value,
-            nomUtilisateur: document.getElementById("nomUtilisateur").value,
+            nomUtilisateur: nomUtilisateur,
             time_: new Date().toLocaleTimeString("fr-FR", { hour12: false }),
-            nomCanal: "",
-            nomUtilisateur_1: "",
-            nomUtilisateur_2: ""
+            nomCanal: null,
+            nomUtilisateur1: "",
+            nomUtilisateur2: ""
         };
 
         if (type === "canal") {
             data.nomCanal = document.getElementById("nomCanal").value;
+            data.nomUtilisateur1 = nomUtilisateur;
+            data.nomUtilisateur2 = nomUtilisateur;
         } else {
-            data.nomUtilisateur_1 = document.getElementById("utilisateur1").value;
-            data.nomUtilisateur_2 = document.getElementById("utilisateur2").value;
-            data.nomCanal = "direct"; // ou une valeur neutre si nécessaire
+            data.nomUtilisateur1 = document.getElementById("utilisateur1").value;
+            data.nomUtilisateur2 = document.getElementById("utilisateur2").value;
         }
 
-        fetch("/Discord/messages", {
+        fetch("${pageContext.request.contextPath}/messages", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data)
@@ -102,6 +105,7 @@
                 document.getElementById("messageResult").innerHTML =
                     "<div class='alert alert-success'>Message envoyé avec succès !</div>";
                 form.reset();
+                toggleFields(); // pour réinitialiser l'affichage des champs
             })
             .catch(err => {
                 document.getElementById("messageResult").innerHTML =

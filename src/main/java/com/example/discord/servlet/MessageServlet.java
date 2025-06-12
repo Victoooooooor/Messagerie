@@ -3,6 +3,7 @@ package com.example.discord.servlet;
 import com.example.discord.dao.CanalDAO;
 import com.example.discord.dao.MessageDAO;
 import com.example.discord.model.Message;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.ServletException;
@@ -11,6 +12,9 @@ import jakarta.servlet.http.*;
 
 import java.io.IOException;
 import java.util.List;
+
+import java.sql.Time;
+import java.time.LocalTime;
 
 @WebServlet("/messages")
 public class MessageServlet extends HttpServlet {
@@ -56,7 +60,19 @@ public class MessageServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
-        Message message = objectMapper.readValue(req.getInputStream(), Message.class);
+        JsonNode json = objectMapper.readTree(req.getInputStream());
+
+        Message message = new Message();
+        message.setContenu(json.get("contenu").asText());
+        message.setNomUtilisateur(json.get("nomUtilisateur").asText());
+        JsonNode canalNode = json.get("nomCanal");
+        message.setNomCanal(canalNode != null && !canalNode.isNull() ? canalNode.asText() : null);
+        message.setNomUtilisateur1(json.get("nomUtilisateur1").asText());
+        message.setNomUtilisateur2(json.get("nomUtilisateur2").asText());
+
+        String timeStr = json.get("time_").asText(); // "15:59:44"
+        message.setTime_(Time.valueOf(timeStr)); // conversion explicite
+
 
         boolean success = messageDAO.insert(message);
         if (success) {
