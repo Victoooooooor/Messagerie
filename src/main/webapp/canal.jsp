@@ -15,13 +15,14 @@
     <h2 class="mb-4 text-center">Messages du canal : <span id="canalName"></span></h2>
 
     <div id="messagesList" class="list-group mb-4">
-        <!-- Les messages seront affichés ici dynamiquement -->
+        <!-- Messages affichés ici dynamiquement -->
     </div>
 
     <div class="text-center">
         <a href="index.jsp" class="btn btn-outline-primary">Retour à l'accueil</a>
     </div>
 </div>
+
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -45,15 +46,61 @@
                 }
 
                 messages.forEach(msg => {
-                    console.log("Message reçu :", msg);  // ← tu le fais déjà, c’est bon
-
                     const item = document.createElement("div");
                     item.className = "list-group-item";
+
                     item.innerHTML =
                         '<strong>' + (msg.nomUtilisateur || "Inconnu") + '</strong>' +
                         '<small class="text-muted float-end">' + (msg.time_ || "?") + '</small><br>' +
-                        (msg.contenu || "");
+                        (msg.contenu || "") +
+                        '<div class="mt-2 reactions" id="reactions-' + msg.idMessage + '"></div>' +
+                        '<div class="mt-2">' +
+                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="like">👍</button>' +
+                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="love">❤️</button>' +
+                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="funny">😂</button>' +
+                        '</div>';
+
                     container.appendChild(item);
+
+                    // Requêtes pour les réactions associées
+                    fetch(contextPath + "/reactions?idMessage=" + msg.idMessage)
+                        .then(response => response.json())
+                        .then(reactions => {
+                            const reactionsDiv = document.getElementById("reactions-" + msg.idMessage);
+                            reactions.forEach(r => {
+                                const emoji = r.typeReaction === "like" ? "👍" :
+                                    r.typeReaction === "love" ? "❤️" :
+                                        r.typeReaction === "funny" ? "😂" : "";
+                                const span = document.createElement("span");
+                                span.className = "badge bg-light text-dark me-1";
+                                span.innerText = emoji + " " + r.nomUtilisateur;
+                                reactionsDiv.appendChild(span);
+                            });
+                        });
+                });
+
+                // Écouteurs de clic sur les réactions
+                document.querySelectorAll(".reaction-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const idMessage = btn.dataset.id;
+                        const typeReaction = btn.dataset.reaction;
+
+                        fetch(contextPath + "/reactions", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                idMessage: parseInt(idMessage),
+                                typeReaction: typeReaction
+                            })
+                        })
+                            .then(response => {
+                                if (!response.ok) throw new Error("Erreur lors de la réaction.");
+                                location.reload();
+                            })
+                            .catch(err => {
+                                alert("Erreur : " + err.message);
+                            });
+                    });
                 });
             })
             .catch(error => {
