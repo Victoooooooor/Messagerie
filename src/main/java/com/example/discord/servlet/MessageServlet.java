@@ -4,6 +4,7 @@ import com.example.discord.dao.CanalDAO;
 import com.example.discord.dao.MessageDAO;
 import com.example.discord.model.Message;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.example.discord.model.Utilisateur;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.ServletException;
@@ -39,26 +40,53 @@ public class MessageServlet extends HttpServlet {
                 return;
             }
 
+            Utilisateur currentUser = (Utilisateur) req.getSession().getAttribute("utilisateur");
+            if (currentUser == null) {
+                resp.sendRedirect("login.jsp");
+                return;
+            }
+
+            boolean autorise = canalDAO.isUserInCanal(currentUser.getNomUtilisateur(), canal);
+            if (!autorise) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                objectMapper.writeValue(resp.getWriter(),
+                        new ErrorResponse("Accès interdit à ce canal."));
+                return;
+            }
+
             List<Message> messages = messageDAO.findByCanal(canal);
             objectMapper.writeValue(resp.getWriter(), messages);
             return;
         }
 
-        // Cas 2 : messages directs entre 2 utilisateurs
+        // Cas 2 : messages directs entre deux utilisateurs
         if (from != null && to != null) {
+            Utilisateur currentUser = (Utilisateur) req.getSession().getAttribute("utilisateur");
+            if (currentUser == null) {
+                resp.sendRedirect("login.jsp");
+                return;
+            }
+
+            String current = currentUser.getNomUtilisateur();
+
+            if (!current.equals(from) && !current.equals(to)) {
+                // Redirection HTML vers l'accueil avec un message d'autorisation refusée
+                resp.sendRedirect("index.jsp?unauthorized=1");
+                return;
+            }
+
             List<Message> messages = messageDAO.findDirectMessages(from, to);
             objectMapper.writeValue(resp.getWriter(), messages);
             return;
         }
 
-        // Cas 3 : mauvaise requête
+        // Cas 3 : requête incorrecte
         resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        objectMapper.writeValue(resp.getWriter(),
-                new ErrorResponse("Veuillez spécifier soit 'canal', soit 'from' et 'to'."));
+        objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Paramètres manquants."));
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
         JsonNode json = objectMapper.readTree(req.getInputStream());
 
@@ -86,7 +114,7 @@ public class MessageServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
         Message updated = objectMapper.readValue(req.getInputStream(), Message.class);
 
@@ -101,7 +129,7 @@ public class MessageServlet extends HttpServlet {
     }
 
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
         String idStr = req.getParameter("id");
 
@@ -126,10 +154,8 @@ public class MessageServlet extends HttpServlet {
         }
     }
 
-    // Classe interne pour les erreurs (si tu veux afficher les erreurs proprement côté JS)
     static class ErrorResponse {
         public String error;
-
         public ErrorResponse(String error) {
             this.error = error;
         }

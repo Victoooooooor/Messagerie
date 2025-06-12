@@ -108,4 +108,27 @@ public class UtilisateurDAO {
             return false;
         }
     }
+    public Utilisateur findByLogin(String nom, String motdepasse) {
+        String sql = "SELECT * FROM Utilisateur WHERE nomutilisateur = ? AND motdepasse = ?";
+
+        try (Connection conn = ConnexionBD.getConnexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, nom);
+            stmt.setString(2, motdepasse);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                Utilisateur u = new Utilisateur();
+                u.setNomUtilisateur(rs.getString("nomutilisateur"));
+                u.setEmail(rs.getString("email"));
+                u.setMotdepasse(rs.getString("motdepasse"));
+                return u;
+            }
+        } catch (SQLException e) {
+            System.out.println("Erreur findByLogin : " + e.getMessage());
+        }
+        return null;
+    }
+
 }
