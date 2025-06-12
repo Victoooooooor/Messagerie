@@ -1,4 +1,8 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%
+    com.example.discord.model.Utilisateur utilisateur = (com.example.discord.model.Utilisateur) session.getAttribute("utilisateur");
+    String utilisateurConnecte = utilisateur.getNomUtilisateur();
+%>
 <html>
 <head>
     <title>Envoyer un message</title>
@@ -10,10 +14,6 @@
     <h2 class="mb-4 text-center">Envoyer un message</h2>
 
     <form id="messageForm" class="card p-4 shadow-sm bg-white">
-        <div class="mb-3">
-            <label for="nomUtilisateur" class="form-label">Auteur du message</label>
-            <input type="text" class="form-control" id="nomUtilisateur" required>
-        </div>
 
         <div class="mb-3">
             <label for="contenu" class="form-label">Contenu du message</label>
@@ -34,12 +34,7 @@
         </div>
 
         <div class="mb-3 direct-only">
-            <label for="utilisateur1" class="form-label">Utilisateur 1</label>
-            <input type="text" class="form-control" id="utilisateur1">
-        </div>
-
-        <div class="mb-3 direct-only">
-            <label for="utilisateur2" class="form-label">Utilisateur 2</label>
+            <label for="utilisateur2" class="form-label">Destinataire (Utilisateur 2)</label>
             <input type="text" class="form-control" id="utilisateur2">
         </div>
 
@@ -54,6 +49,8 @@
 </div>
 
 <script>
+    const utilisateurConnecte = "<%= utilisateurConnecte %>";
+
     const form = document.getElementById("messageForm");
     const typeSelect = document.getElementById("type");
     const canalFields = document.querySelectorAll(".canal-only");
@@ -72,11 +69,10 @@
         e.preventDefault();
 
         const type = typeSelect.value;
-        const nomUtilisateur = document.getElementById("nomUtilisateur").value;
 
         const data = {
             contenu: document.getElementById("contenu").value,
-            nomUtilisateur: nomUtilisateur,
+            nomUtilisateur: utilisateurConnecte,
             time_: new Date().toLocaleTimeString("fr-FR", { hour12: false }),
             nomCanal: null,
             nomUtilisateur1: "",
@@ -85,10 +81,11 @@
 
         if (type === "canal") {
             data.nomCanal = document.getElementById("nomCanal").value;
-            data.nomUtilisateur1 = nomUtilisateur;
-            data.nomUtilisateur2 = nomUtilisateur;
+            data.nomUtilisateur1 = utilisateurConnecte;
+            data.nomUtilisateur2 = utilisateurConnecte;
         } else {
-            data.nomUtilisateur1 = document.getElementById("utilisateur1").value;
+            data.nomCanal = null;
+            data.nomUtilisateur1 = utilisateurConnecte;
             data.nomUtilisateur2 = document.getElementById("utilisateur2").value;
         }
 
@@ -105,7 +102,7 @@
                 document.getElementById("messageResult").innerHTML =
                     "<div class='alert alert-success'>Message envoyé avec succès !</div>";
                 form.reset();
-                toggleFields(); // pour réinitialiser l'affichage des champs
+                toggleFields();
             })
             .catch(err => {
                 document.getElementById("messageResult").innerHTML =
