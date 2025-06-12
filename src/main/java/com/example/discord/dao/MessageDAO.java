@@ -118,10 +118,12 @@ public class MessageDAO {
 
     public List<Message> findDirectMessages(String from, String to) {
         List<Message> messages = new ArrayList<>();
-        String sql = "SELECT IdMessage, contenu, time_, NomUtilisateur, NomCanal " +
-                "FROM Message " +
-                "WHERE (NomUtilisateur_1 = ? AND NomUtilisateur_2 = ?) " +
-                "   OR (NomUtilisateur_1 = ? AND NomUtilisateur_2 = ?) " +
+        String sql = "SELECT idmessage, contenu, time_, nomutilisateur, nomcanal " +
+                "FROM message " +
+                "WHERE nomcanal IS NULL AND ( " +
+                "      (nomutilisateur_1 = ? AND nomutilisateur_2 = ?) " +
+                "   OR (nomutilisateur_1 = ? AND nomutilisateur_2 = ?) " +
+                ") " +
                 "ORDER BY time_";
 
         try (Connection conn = ConnexionBD.getConnexion();
@@ -136,11 +138,11 @@ public class MessageDAO {
 
             while (rs.next()) {
                 Message msg = new Message();
-                msg.setIdMessage(rs.getInt("IdMessage"));
+                msg.setIdMessage(rs.getInt("idmessage"));
                 msg.setContenu(rs.getString("contenu"));
                 msg.setTime_(rs.getString("time_"));
-                msg.setNomUtilisateur(rs.getString("NomUtilisateur"));
-                msg.setNomCanal(rs.getString("NomCanal"));
+                msg.setNomUtilisateur(rs.getString("nomutilisateur"));
+                msg.setNomCanal(rs.getString("nomcanal"));  // sera null
                 messages.add(msg);
             }
 
