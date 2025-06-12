@@ -77,16 +77,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Lien formulaire message -->
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Envoyer un message</h5>
-                    <a href="messageForm.jsp" class="btn btn-outline-secondary">Accéder au formulaire de message</a>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 

@@ -2,6 +2,10 @@
 <%
     String contextPath = request.getContextPath();
 %>
+<%
+    com.example.discord.model.Utilisateur utilisateur = (com.example.discord.model.Utilisateur) session.getAttribute("utilisateur");
+    String utilisateurConnecte = utilisateur.getNomUtilisateur();
+%>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -23,6 +27,13 @@
     <div class="text-center">
         <a href="index.jsp" class="btn btn-outline-primary">Retour à l'accueil</a>
     </div>
+    <!-- Formulaire d'envoi de message -->
+    <div class="card shadow-sm fixed-bottom mx-auto" style="max-width: 800px;">
+        <div class="card-body d-flex align-items-center gap-2">
+            <input type="text" id="messageInput" class="form-control" placeholder="Écrire un message..." />
+            <button id="sendMessageBtn" class="btn btn-primary">Envoyer</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -31,6 +42,7 @@
         const from = urlParams.get("from");
         const to = urlParams.get("to");
         const contextPath = "<%= contextPath %>";
+        const utilisateurConnecte = "<%= utilisateurConnecte %>";
 
         document.getElementById("fromUser").textContent = from;
         document.getElementById("toUser").textContent = to;
@@ -123,7 +135,39 @@
                             });
                     });
                 });
+                document.getElementById("sendMessageBtn").addEventListener("click", () => {
+                    const contenu = document.getElementById("messageInput").value.trim();
+                    if (contenu === "") return;
+
+                    const from = utilisateurConnecte;
+                    const to = urlParams.get("to");
+
+                    fetch(contextPath + "/messages", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contenu: contenu,
+                            nomCanal: null,
+                            nomUtilisateur1: from,
+                            nomUtilisateur2: to,
+                            time_: new Date().toLocaleTimeString("fr-FR", { hour12: false })
+                        })
+                    })
+                        .then(response => {
+                            if (!response.ok) throw new Error("Erreur lors de l'envoi du message.");
+                            return response.json();
+                        })
+                        .then(() => {
+                            document.getElementById("messageInput").value = "";
+                            location.reload(); // ou appel dynamique si tu préfères sans reload
+                        })
+                        .catch(err => {
+                            alert("Erreur : " + err.message);
+                        });
+                });
             })
+
+
             .catch(error => {
                 const container = document.getElementById("messagesList");
                 container.innerHTML = `<div class="text-danger text-center">Erreur : ${error.message}</div>`;

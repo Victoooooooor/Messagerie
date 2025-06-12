@@ -10,6 +10,22 @@ import java.util.List;
 
 public class MessageDAO {
 
+    public int getNextIdMessage() {
+        String sql = "SELECT COALESCE(MAX(idmessage), 0) + 1 AS next_id FROM message";
+        try (Connection conn = ConnexionBD.getConnexion();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                return rs.getInt("next_id");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Erreur getNextIdMessage : " + e.getMessage());
+        }
+        return 1;
+    }
+
     public List<Message> findAll() {
         List<Message> result = new ArrayList<>();
         String sql = "SELECT IdMessage, contenu, time_, NomUtilisateur, NomCanal FROM Message";
@@ -36,21 +52,22 @@ public class MessageDAO {
     }
 
     public boolean insert(Message msg) {
-        String sql = "INSERT INTO Message (contenu, time_, NomUtilisateur, NomUtilisateur_1, NomUtilisateur_2, NomCanal) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Message (idmessage, contenu, time_, NomUtilisateur, NomUtilisateur_1, NomUtilisateur_2, NomCanal) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConnexionBD.getConnexion();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, msg.getContenu());
-            stmt.setTime(2, msg.getTime_());
-            stmt.setString(3, msg.getNomUtilisateur());
-            stmt.setString(4, msg.getNomUtilisateur1());
-            stmt.setString(5, msg.getNomUtilisateur2());
+            stmt.setInt(1, msg.getIdMessage());
+            stmt.setString(2, msg.getContenu());
+            stmt.setTime(3, msg.getTime_());
+            stmt.setString(4, msg.getNomUtilisateur());
+            stmt.setString(5, msg.getNomUtilisateur1());
+            stmt.setString(6, msg.getNomUtilisateur2());
 
             if (msg.getNomCanal() == null) {
-                stmt.setNull(6, java.sql.Types.VARCHAR);
+                stmt.setNull(7, java.sql.Types.VARCHAR);
             } else {
-                stmt.setString(6, msg.getNomCanal());
+                stmt.setString(7, msg.getNomCanal());
             }
 
             return stmt.executeUpdate() > 0;
