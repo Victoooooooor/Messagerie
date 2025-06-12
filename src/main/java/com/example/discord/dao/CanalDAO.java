@@ -82,7 +82,7 @@ public class CanalDAO {
     }
 
     public boolean exists(String nomCanal) {
-        String sql = "SELECT 1 FROM Canal WHERE NomCanal = ?";
+        String sql = "SELECT 1 FROM canal WHERE nomcanal = ?";
         try (Connection conn = ConnexionBD.getConnexion();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -92,6 +92,27 @@ public class CanalDAO {
 
         } catch (SQLException e) {
             System.out.println("Erreur exists Canal : " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean isUserInCanal(String nomUtilisateur, String nomCanal) {
+        String sql = """
+        SELECT 1
+        FROM appartient a
+        JOIN canal c ON a.nomespace = c.nomespace
+        WHERE a.nomutilisateur = ? AND c.nomcanal = ?
+    """;
+        try (Connection conn = ConnexionBD.getConnexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, nomUtilisateur);
+            stmt.setString(2, nomCanal);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next();
+
+        } catch (SQLException e) {
+            System.out.println("Erreur isUserInCanal : " + e.getMessage());
             return false;
         }
     }
