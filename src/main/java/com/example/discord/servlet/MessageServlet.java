@@ -88,28 +88,58 @@ public class MessageServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
-        JsonNode json = objectMapper.readTree(req.getInputStream());
+        System.out.println("[DEBUG] Appel POST /messages");
 
-        Message message = new Message();
-        message.setContenu(json.get("contenu").asText());
-        message.setNomUtilisateur(json.get("nomUtilisateur").asText());
-        JsonNode canalNode = json.get("nomCanal");
-        message.setNomCanal(canalNode != null && !canalNode.isNull() ? canalNode.asText() : null);
-        message.setNomUtilisateur1(json.get("nomUtilisateur1").asText());
-        message.setNomUtilisateur2(json.get("nomUtilisateur2").asText());
+        try {
+            JsonNode json = objectMapper.readTree(req.getInputStream());
+            System.out.println("[DEBUG] JSON reçu : " + json.toString());
 
-        String timeStr = json.get("time_").asText(); // "15:59:44"
-        message.setTime_(Time.valueOf(timeStr)); // conversion explicite
+            Message message = new Message();
 
+            // Lire les champs avec vérification
+            String contenu = json.has("contenu") ? json.get("contenu").asText() : null;
+            String nomCanal = json.has("nomCanal") && !json.get("nomCanal").isNull() ? json.get("nomCanal").asText() : null;
+            String nomUtilisateur1 = json.has("nomUtilisateur1") ? json.get("nomUtilisateur1").asText() : null;
+            String nomUtilisateur2 = json.has("nomUtilisateur2") ? json.get("nomUtilisateur2").asText() : null;
+            String timeStr = json.has("time_") ? json.get("time_").asText() : null;
 
-        boolean success = messageDAO.insert(message);
-        if (success) {
-            resp.setStatus(HttpServletResponse.SC_CREATED);
-            objectMapper.writeValue(resp.getWriter(), message);
-        } else {
+            if (contenu == null || nomUtilisateur1 == null || nomUtilisateur2 == null || timeStr == null) {
+                System.out.println("[ERREUR] Champs manquants !");
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Champs requis manquants."));
+                return;
+            }
+
+            message.setContenu(contenu);
+            message.setNomUtilisateur(nomUtilisateur1); // expéditeur
+            message.setNomCanal(nomCanal);
+            message.setNomUtilisateur1(nomUtilisateur1);
+            message.setNomUtilisateur2(nomUtilisateur2);
+            message.setTime_(Time.valueOf(timeStr));
+
+            System.out.println("[DEBUG] Message préparé : " + message.getContenu() + " de " + nomUtilisateur1 + " à " + nomUtilisateur2);
+
+            int nextId = messageDAO.getNextIdMessage();
+            message.setIdMessage(nextId);
+            boolean success = messageDAO.insert(message);
+
+            if (success) {
+                System.out.println("[SUCCESS] Message inséré");
+                resp.setStatus(HttpServletResponse.SC_CREATED);
+                objectMapper.writeValue(resp.getWriter(), message);
+            } else {
+                System.out.println("[ERREUR] Échec d'insertion");
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                objectMapper.writeValue(resp.getWriter(),
+                        new ErrorResponse("Erreur lors de l'insertion du message."));
+            }
+
+        } catch (Exception e) {
+            System.out.println("[EXCEPTION] " + e.getMessage());
+            e.printStackTrace();
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             objectMapper.writeValue(resp.getWriter(),
-                    new ErrorResponse("Erreur lors de l'insertion du message."));
+                    new ErrorResponse("Erreur inattendue côté serveur."));
         }
     }
 
