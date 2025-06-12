@@ -1,6 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<html>
+<%
+    String contextPath = request.getContextPath();
+%>
+<!DOCTYPE html>
+<html lang="fr">
 <head>
+    <meta charset="UTF-8">
     <title>Conversation directe</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -12,7 +17,7 @@
     </h2>
 
     <div id="messagesList" class="list-group mb-4">
-        <!-- Messages de la conversation affichés ici -->
+        <!-- Messages affichés ici dynamiquement -->
     </div>
 
     <div class="text-center">
@@ -21,43 +26,47 @@
 </div>
 
 <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const from = urlParams.get("from");
-    const to = urlParams.get("to");
+    document.addEventListener("DOMContentLoaded", () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const from = urlParams.get("from");
+        const to = urlParams.get("to");
+        const contextPath = "<%= contextPath %>";
 
-    document.getElementById("fromUser").textContent = from;
-    document.getElementById("toUser").textContent = to;
+        document.getElementById("fromUser").textContent = from;
+        document.getElementById("toUser").textContent = to;
 
-    fetch(`/Discord/messages?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Erreur lors du chargement des messages");
-            }
-            return response.json();
-        })
-        .then(messages => {
-            const container = document.getElementById("messagesList");
+        fetch(contextPath + "/messages?from=" + encodeURIComponent(from) + "&to=" + encodeURIComponent(to))
+            .then(response => {
+                if (!response.ok) throw new Error("Erreur lors du chargement des messages");
+                return response.json();
+            })
+            .then(messages => {
+                const container = document.getElementById("messagesList");
+                container.innerHTML = "";
 
-            if (messages.length === 0) {
-                container.innerHTML = "<p class='text-muted'>Aucun message dans cette conversation.</p>";
-            }
+                if (!messages || messages.length === 0) {
+                    container.innerHTML = `<div class="text-muted text-center">Aucun message dans cette conversation.</div>`;
+                    return;
+                }
 
-            messages.forEach(msg => {
-                const item = document.createElement("div");
-                item.className = "list-group-item";
+                messages.forEach(msg => {
+                    console.log("Message reçu :", msg);  // debug
 
-                item.innerHTML = `
-                    <strong>${msg.nomUtilisateur}</strong>
-                    <small class="text-muted float-end">${msg.time_}</small><br>
-                    ${msg.contenu}
-                `;
-                container.appendChild(item);
+                    const item = document.createElement("div");
+                    item.className = "list-group-item";
+                    item.innerHTML =
+                        '<strong>' + (msg.nomUtilisateur || "Inconnu") + '</strong>' +
+                        '<small class="text-muted float-end">' + (msg.time_ || "?") + '</small><br>' +
+                        (msg.contenu || "");
+                    container.appendChild(item);
+                });
+            })
+            .catch(error => {
+                const container = document.getElementById("messagesList");
+                container.innerHTML = `<div class="text-danger text-center">Erreur : ${error.message}</div>`;
+                console.error("Erreur lors du fetch :", error);
             });
-        })
-        .catch(error => {
-            document.getElementById("messagesList").innerHTML =
-                `<p class="text-danger">Erreur : ${error.message}</p>`;
-        });
+    });
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
