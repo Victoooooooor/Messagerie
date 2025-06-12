@@ -11,22 +11,20 @@ public class MessageDAO {
 
     public List<Message> findAll() {
         List<Message> result = new ArrayList<>();
-        String sql = "SELECT * FROM Message";
+        String sql = "SELECT IdMessage, contenu, time_, NomUtilisateur, NomCanal FROM Message";
 
         try (Connection conn = ConnexionBD.getConnexion();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                result.add(new Message(
-                        rs.getInt("IdMessage"),
-                        rs.getString("contenu"),
-                        rs.getString("time_"),
-                        rs.getString("NomUtilisateur"),
-                        rs.getString("NomUtilisateur_1"),
-                        rs.getString("NomUtilisateur_2"),
-                        rs.getString("NomCanal")
-                ));
+                Message m = new Message();
+                m.setIdMessage(rs.getInt("IdMessage"));
+                m.setContenu(rs.getString("contenu"));
+                m.setTime_(rs.getString("time_"));
+                m.setNomUtilisateur(rs.getString("NomUtilisateur"));
+                m.setNomCanal(rs.getString("NomCanal"));
+                result.add(m);
             }
 
         } catch (SQLException e) {
@@ -37,18 +35,16 @@ public class MessageDAO {
     }
 
     public boolean insert(Message msg) {
-        String sql = "INSERT INTO Message (IdMessage, contenu, time_, NomUtilisateur, NomUtilisateur_1, NomUtilisateur_2, NomCanal) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Message (IdMessage, contenu, time_, NomUtilisateur, NomCanal) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = ConnexionBD.getConnexion();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, msg.getIdMessage());
             stmt.setString(2, msg.getContenu());
-            stmt.setString(3, msg.getTime());
+            stmt.setString(3, msg.getTime_());
             stmt.setString(4, msg.getNomUtilisateur());
-            stmt.setString(5, msg.getNomUtilisateur1());
-            stmt.setString(6, msg.getNomUtilisateur2());
-            stmt.setString(7, msg.getNomCanal());
+            stmt.setString(5, msg.getNomCanal());
 
             return stmt.executeUpdate() > 0;
 
@@ -74,18 +70,16 @@ public class MessageDAO {
     }
 
     public boolean update(Message msg) {
-        String sql = "UPDATE Message SET contenu = ?, time_ = ?, NomUtilisateur = ?, NomUtilisateur_1 = ?, NomUtilisateur_2 = ?, NomCanal = ? WHERE IdMessage = ?";
+        String sql = "UPDATE Message SET contenu = ?, time_ = ?, NomUtilisateur = ?, NomCanal = ? WHERE IdMessage = ?";
 
         try (Connection conn = ConnexionBD.getConnexion();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, msg.getContenu());
-            stmt.setString(2, msg.getTime());
+            stmt.setString(2, msg.getTime_());
             stmt.setString(3, msg.getNomUtilisateur());
-            stmt.setString(4, msg.getNomUtilisateur1());
-            stmt.setString(5, msg.getNomUtilisateur2());
-            stmt.setString(6, msg.getNomCanal());
-            stmt.setInt(7, msg.getIdMessage());
+            stmt.setString(4, msg.getNomCanal());
+            stmt.setInt(5, msg.getIdMessage());
 
             return stmt.executeUpdate() > 0;
 
@@ -97,7 +91,7 @@ public class MessageDAO {
 
     public List<Message> findByCanal(String nomCanal) {
         List<Message> messages = new ArrayList<>();
-        String sql = "SELECT * FROM Message WHERE NomCanal = ? ORDER BY time_";
+        String sql = "SELECT IdMessage, contenu, time_, NomUtilisateur, NomCanal FROM Message WHERE NomCanal = ? ORDER BY time_";
 
         try (Connection conn = ConnexionBD.getConnexion();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -106,15 +100,13 @@ public class MessageDAO {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                messages.add(new Message(
-                        rs.getInt("IdMessage"),
-                        rs.getString("contenu"),
-                        rs.getString("time_"),
-                        rs.getString("NomUtilisateur"),
-                        rs.getString("NomUtilisateur_1"),
-                        rs.getString("NomUtilisateur_2"),
-                        rs.getString("NomCanal")
-                ));
+                Message m = new Message();
+                m.setIdMessage(rs.getInt("IdMessage"));
+                m.setContenu(rs.getString("contenu"));
+                m.setTime_(rs.getString("time_"));
+                m.setNomUtilisateur(rs.getString("NomUtilisateur"));
+                m.setNomCanal(rs.getString("NomCanal"));
+                messages.add(m);
             }
 
         } catch (SQLException e) {
@@ -126,9 +118,11 @@ public class MessageDAO {
 
     public List<Message> findDirectMessages(String from, String to) {
         List<Message> messages = new ArrayList<>();
-        String sql = "SELECT * FROM Message WHERE " +
-                "(NomUtilisateur_1 = ? AND NomUtilisateur_2 = ?) OR " +
-                "(NomUtilisateur_1 = ? AND NomUtilisateur_2 = ?) ORDER BY time_";
+        String sql = "SELECT IdMessage, contenu, time_, NomUtilisateur, NomCanal " +
+                "FROM Message " +
+                "WHERE (NomUtilisateur_1 = ? AND NomUtilisateur_2 = ?) " +
+                "   OR (NomUtilisateur_1 = ? AND NomUtilisateur_2 = ?) " +
+                "ORDER BY time_";
 
         try (Connection conn = ConnexionBD.getConnexion();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -141,15 +135,13 @@ public class MessageDAO {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                messages.add(new Message(
-                        rs.getInt("IdMessage"),
-                        rs.getString("contenu"),
-                        rs.getString("time_"),
-                        rs.getString("NomUtilisateur"),
-                        rs.getString("NomUtilisateur_1"),
-                        rs.getString("NomUtilisateur_2"),
-                        rs.getString("NomCanal")
-                ));
+                Message msg = new Message();
+                msg.setIdMessage(rs.getInt("IdMessage"));
+                msg.setContenu(rs.getString("contenu"));
+                msg.setTime_(rs.getString("time_"));
+                msg.setNomUtilisateur(rs.getString("NomUtilisateur"));
+                msg.setNomCanal(rs.getString("NomCanal"));
+                messages.add(msg);
             }
 
         } catch (SQLException e) {
