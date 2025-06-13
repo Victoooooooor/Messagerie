@@ -1,5 +1,7 @@
 # Mini Discord – Comptes de connexion
 
+Les fichiers sont dans les répertoires Diagram (MCD, MLD, script sql sans examples) et SQL (avec examples) !
+
 ## ⚙️ Installation
 
 ### 1. Créer la base de données

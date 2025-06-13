@@ -1,0 +1,80 @@
+CREATE TABLE Utilisateur(
+   NomUtilisateur VARCHAR(50),
+   email VARCHAR(50),
+   motdepasse VARCHAR(50),
+   PRIMARY KEY(NomUtilisateur)
+);
+
+CREATE TABLE EspaceTravail(
+   NomEspace VARCHAR(50),
+   description VARCHAR(50),
+   PRIMARY KEY(NomEspace)
+);
+
+CREATE TABLE Canal(
+   NomCanal VARCHAR(50),
+   typecanal VARCHAR(50),
+   NomEspace VARCHAR(50) NOT NULL,
+   PRIMARY KEY(NomCanal),
+   FOREIGN KEY(NomEspace) REFERENCES EspaceTravail(NomEspace)
+);
+
+CREATE TABLE Message(
+   IdMessage INT,
+   contenu VARCHAR(50),
+   time_ TIME NOT NULL,
+   NomUtilisateur VARCHAR(50) NOT NULL,
+   NomUtilisateur_1 VARCHAR(50) NOT NULL,
+   NomUtilisateur_2 VARCHAR(50) NOT NULL,
+   NomCanal VARCHAR(50) NOT NULL,
+   PRIMARY KEY(IdMessage),
+   FOREIGN KEY(NomUtilisateur) REFERENCES Utilisateur(NomUtilisateur),
+   FOREIGN KEY(NomUtilisateur_1) REFERENCES Utilisateur(NomUtilisateur),
+   FOREIGN KEY(NomUtilisateur_2) REFERENCES Utilisateur(NomUtilisateur),
+   FOREIGN KEY(NomCanal) REFERENCES Canal(NomCanal)
+);
+
+CREATE TABLE Administre(
+   NomUtilisateur VARCHAR(50),
+   NomEspace VARCHAR(50),
+   PRIMARY KEY(NomUtilisateur, NomEspace),
+   FOREIGN KEY(NomUtilisateur) REFERENCES Utilisateur(NomUtilisateur),
+   FOREIGN KEY(NomEspace) REFERENCES EspaceTravail(NomEspace)
+);
+
+CREATE TABLE Appartient(
+   NomUtilisateur VARCHAR(50),
+   NomEspace VARCHAR(50),
+   PRIMARY KEY(NomUtilisateur, NomEspace),
+   FOREIGN KEY(NomUtilisateur) REFERENCES Utilisateur(NomUtilisateur),
+   FOREIGN KEY(NomEspace) REFERENCES EspaceTravail(NomEspace)
+);
+
+CREATE TABLE Reaction(
+   NomUtilisateur VARCHAR(50),
+   IdMessage INT,
+   typeReaction VARCHAR(50),
+   PRIMARY KEY(NomUtilisateur, IdMessage),
+   FOREIGN KEY(NomUtilisateur) REFERENCES Utilisateur(NomUtilisateur),
+   FOREIGN KEY(IdMessage) REFERENCES Message(IdMessage)
+);
+
+CREATE TABLE InvitationCanal(
+   NomUtilisateur VARCHAR(50),
+   NomEspace VARCHAR(50),
+   emailinvitation VARCHAR(50),
+   statut VARCHAR(50),
+   PRIMARY KEY(NomUtilisateur, NomEspace),
+   FOREIGN KEY(NomUtilisateur) REFERENCES Utilisateur(NomUtilisateur),
+   FOREIGN KEY(NomEspace) REFERENCES EspaceTravail(NomEspace)
+);
+
+CREATE TABLE InvitationEspace(
+   NomUtilisateur VARCHAR(50),
+   NomEspace VARCHAR(50),
+   emailinvitation VARCHAR(50),
+   statut VARCHAR(50),
+   PRIMARY KEY(NomUtilisateur, NomEspace),
+   FOREIGN KEY(NomUtilisateur) REFERENCES Utilisateur(NomUtilisateur),
+   FOREIGN KEY(NomEspace) REFERENCES EspaceTravail(NomEspace)
+);
