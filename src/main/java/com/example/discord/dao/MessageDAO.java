@@ -3,7 +3,6 @@ package com.example.discord.dao;
 import com.example.discord.model.Message;
 import com.example.discord.util.ConnexionBD;
 
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +37,7 @@ public class MessageDAO {
                 Message m = new Message();
                 m.setIdMessage(rs.getInt("IdMessage"));
                 m.setContenu(rs.getString("contenu"));
-                m.setTime_(rs.getTime("time_"));
+                m.setTime_(rs.getTimestamp("time_"));
                 m.setNomUtilisateur(rs.getString("NomUtilisateur"));
                 m.setNomCanal(rs.getString("NomCanal"));
                 result.add(m);
@@ -59,7 +58,7 @@ public class MessageDAO {
 
             stmt.setInt(1, msg.getIdMessage());
             stmt.setString(2, msg.getContenu());
-            stmt.setTime(3, msg.getTime_());
+            stmt.setTimestamp(3, msg.getTime_());
             stmt.setString(4, msg.getNomUtilisateur());
             stmt.setString(5, msg.getNomUtilisateur1());
             stmt.setString(6, msg.getNomUtilisateur2());
@@ -100,7 +99,7 @@ public class MessageDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, msg.getContenu());
-            stmt.setTime(2, msg.getTime_());
+            stmt.setTimestamp(2, msg.getTime_());
             stmt.setString(3, msg.getNomUtilisateur());
             if (msg.getNomCanal() == null) {
                 stmt.setNull(4, java.sql.Types.VARCHAR);
@@ -132,7 +131,7 @@ public class MessageDAO {
                 Message m = new Message();
                 m.setIdMessage(rs.getInt("IdMessage"));
                 m.setContenu(rs.getString("contenu"));
-                m.setTime_(rs.getTime("time_"));
+                m.setTime_(rs.getTimestamp("time_"));
                 m.setNomUtilisateur(rs.getString("NomUtilisateur"));
                 m.setNomCanal(rs.getString("NomCanal"));
                 messages.add(m);
@@ -169,7 +168,7 @@ public class MessageDAO {
                 Message msg = new Message();
                 msg.setIdMessage(rs.getInt("idmessage"));
                 msg.setContenu(rs.getString("contenu"));
-                msg.setTime_(rs.getTime("time_"));
+                msg.setTime_(rs.getTimestamp("time_"));
                 msg.setNomUtilisateur(rs.getString("NomUtilisateur"));
                 msg.setNomCanal(rs.getString("NomCanal"));
                 messages.add(msg);

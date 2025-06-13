@@ -14,8 +14,7 @@ import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.util.List;
 
-import java.sql.Time;
-import java.time.LocalTime;
+
 
 @WebServlet("/messages")
 public class MessageServlet extends HttpServlet {
@@ -96,14 +95,12 @@ public class MessageServlet extends HttpServlet {
 
             Message message = new Message();
 
-            // Lire les champs avec vérification
             String contenu = json.has("contenu") ? json.get("contenu").asText() : null;
             String nomCanal = json.has("nomCanal") && !json.get("nomCanal").isNull() ? json.get("nomCanal").asText() : null;
             String nomUtilisateur1 = json.has("nomUtilisateur1") ? json.get("nomUtilisateur1").asText() : null;
             String nomUtilisateur2 = json.has("nomUtilisateur2") ? json.get("nomUtilisateur2").asText() : null;
-            String timeStr = json.has("time_") ? json.get("time_").asText() : null;
 
-            if (contenu == null || nomUtilisateur1 == null || nomUtilisateur2 == null || timeStr == null) {
+            if (contenu == null || nomUtilisateur1 == null || nomUtilisateur2 == null) {
                 System.out.println("[ERREUR] Champs manquants !");
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Champs requis manquants."));
@@ -111,13 +108,16 @@ public class MessageServlet extends HttpServlet {
             }
 
             message.setContenu(contenu);
-            message.setNomUtilisateur(nomUtilisateur1); // expéditeur
+            message.setNomUtilisateur(nomUtilisateur1);
             message.setNomCanal(nomCanal);
             message.setNomUtilisateur1(nomUtilisateur1);
             message.setNomUtilisateur2(nomUtilisateur2);
-            message.setTime_(Time.valueOf(timeStr));
 
-            System.out.println("[DEBUG] Message préparé : " + message.getContenu() + " de " + nomUtilisateur1 + " à " + nomUtilisateur2);
+            // Utilisation du timestamp courant du serveur
+            java.sql.Timestamp now = java.sql.Timestamp.valueOf(java.time.LocalDateTime.now());
+            message.setTime_(now);
+
+            System.out.println("[DEBUG] Message préparé : " + contenu + " à " + now);
 
             int nextId = messageDAO.getNextIdMessage();
             message.setIdMessage(nextId);
@@ -130,16 +130,14 @@ public class MessageServlet extends HttpServlet {
             } else {
                 System.out.println("[ERREUR] Échec d'insertion");
                 resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                objectMapper.writeValue(resp.getWriter(),
-                        new ErrorResponse("Erreur lors de l'insertion du message."));
+                objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Erreur lors de l'insertion du message."));
             }
 
         } catch (Exception e) {
             System.out.println("[EXCEPTION] " + e.getMessage());
             e.printStackTrace();
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            objectMapper.writeValue(resp.getWriter(),
-                    new ErrorResponse("Erreur inattendue côté serveur."));
+            objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Erreur inattendue côté serveur."));
         }
     }
 
