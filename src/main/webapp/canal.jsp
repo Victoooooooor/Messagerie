@@ -60,6 +60,10 @@
                     messages.forEach(msg => {
                         const item = document.createElement("div");
                         item.className = "list-group-item";
+
+                        const estAuteur = msg.nomUtilisateur === utilisateurConnecte;
+
+                        
                         const timestamp = parseInt(msg.time_);
                         const dateAffichee = !isNaN(timestamp)
                             ? new Intl.DateTimeFormat("fr-FR", {
@@ -72,11 +76,18 @@
                             '<small class="text-muted float-end">' + dateAffichee + '</small><br>'  +
                             (msg.contenu || "") +
                             '<div class="mt-2 reactions" id="reactions-' + msg.idMessage + '"></div>' +
-                            '<div class="mt-2">' +
-                            '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="like">👍</button>' +
-                            '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="love">❤️</button>' +
-                            '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="funny">😂</button>' +
+                            '<div class="mt-2 d-flex justify-content-between">' +
+                                '<div>' +
+                                    '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="like">👍</button>' +
+                                    '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="love">❤️</button>' +
+                                    '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="funny">😂</button>' +
+                                '</div>' +
+                                (estAuteur ? '<div>' +
+                                    '<button class="btn btn-warning btn-sm me-1 edit-btn" data-id="' + msg.idMessage + '">✏️</button>' +
+                                    '<button class="btn btn-danger btn-sm delete-btn" data-id="' + msg.idMessage + '">🗑️</button>' +
+                                '</div>' : '') +
                             '</div>';
+
                         container.appendChild(item);
 
                         fetch(contextPath + "/reactions?idMessage=" + msg.idMessage)
@@ -94,6 +105,49 @@
                                 });
                             });
                     });
+
+                    // Suppression
+                    document.querySelectorAll(".delete-btn").forEach(btn => {
+                        btn.addEventListener("click", () => {
+                            const id = btn.dataset.id;
+                            if (!confirm("Supprimer ce message ?")) return;
+                            fetch(contextPath + "/messages?id=" + id, {
+                                method: "DELETE"
+                            }).then(res => {
+                                if (res.status === 204) location.reload();
+                                else alert("Erreur lors de la suppression.");
+                            });
+                        });
+                    });
+
+                    // Modification
+                    document.querySelectorAll(".edit-btn").forEach(btn => {
+                        btn.addEventListener("click", () => {
+                            const id = btn.dataset.id;
+                            const div = document.getElementById("contenu-" + id);
+                            const ancien = div.innerText;
+                            const nouveau = prompt("Nouveau message :", ancien);
+                            if (!nouveau) return;
+
+                            fetch(contextPath + "/messages", {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    idMessage: parseInt(id),
+                                    contenu: nouveau,
+                                    time_: null, // ne change pas la date
+                                    nomUtilisateur: utilisateurConnecte,
+                                    nomUtilisateur1: utilisateurConnecte,
+                                    nomUtilisateur2: utilisateurConnecte,
+                                    nomCanal: canal
+                                })
+                            }).then(res => {
+                                if (res.ok) location.reload();
+                                else alert("Erreur lors de la modification.");
+                            });
+                        });
+                    });
+
 
                     document.querySelectorAll(".reaction-btn").forEach(btn => {
                         btn.addEventListener("click", () => {
@@ -132,11 +186,15 @@
                         });
                     });
                 })
+
                 .catch(error => {
                     const container = document.getElementById("messagesList");
                     container.innerHTML = `<div class="text-danger text-center">Erreur : ${error.message}</div>`;
                     console.error("Erreur lors du fetch :", error);
                 });
+
+
+
         }
 
         chargerMessages();
@@ -170,6 +228,7 @@
                     alert("Erreur : " + err.message);
                 });
         });
+
     });
 </script>
 
