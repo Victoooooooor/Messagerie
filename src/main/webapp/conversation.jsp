@@ -64,12 +64,19 @@
                 messages.forEach(msg => {
                     const item = document.createElement("div");
                     item.className = "list-group-item";
+                    const timestamp = parseInt(msg.time_);
+                    const dateAffichee = !isNaN(timestamp)
+                        ? new Intl.DateTimeFormat("fr-FR", {
+                            dateStyle: "short",
+                            timeStyle: "medium"
+                        }).format(new Date(timestamp))
+                        : "?";
 
                     item.innerHTML =
                         '<strong>' + (msg.nomUtilisateur || "Inconnu") + '</strong>' +
-                        '<small class="text-muted float-end">' + (msg.time_ || "?") + '</small><br>' +
+                        '<small class="text-muted float-end">' + dateAffichee + '</small><br>' +
                         (msg.contenu || "") +
-                        '<div class="mt-2 reactions" id="reactions-' + msg.idMessage + '"></div>' + // les réactions seront insérées ici
+                        '<div class="mt-2 reactions" id="reactions-' + msg.idMessage + '"></div>' +
                         '<div class="mt-2">' +
                         '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="like">👍</button>' +
                         '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="love">❤️</button>' +
