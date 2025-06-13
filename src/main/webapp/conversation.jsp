@@ -74,19 +74,21 @@
 
                     item.innerHTML =
                         '<strong>' + (msg.nomUtilisateur || "Inconnu") + '</strong>' +
-                        '<small class="text-muted float-end">' + dateAffichee + '</small><br>' +
-                        (msg.contenu || "") +
-                        '<div class="mt-2 reactions" id="reactions-' + msg.idMessage + '"></div>' +
-                        '<div class="mt-2">' +
-                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="like">👍</button>' +
-                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="love">❤️</button>' +
-                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="funny">😂</button>' +
+                        '<small class="text-muted float-end">' + dateAffichee + '</small><br>'  +
+                        '<div id="contenu-' + msg.idMessage + '">' + (msg.contenu || "") + '</div>' +
 
-                        '</div>'+
-                            (estAuteur ? '<div>' +
-                                '<button class="btn btn-warning btn-sm me-1 edit-btn" data-id="' + msg.idMessage + '">✏️</button>' +
-                                '<button class="btn btn-danger btn-sm delete-btn" data-id="' + msg.idMessage + '">🗑️</button>' +
-                            '</div>' : '') +;
+                                                '<div class="mt-2 reactions" id="reactions-' + msg.idMessage + '"></div>' +
+                                                '<div class="mt-2 d-flex justify-content-between">' +
+                                                    '<div>' +
+                                                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="like">👍</button>' +
+                                                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="love">❤️</button>' +
+                                                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="funny">😂</button>' +
+                                                    '</div>' +
+                                                    (estAuteur ? '<div>' +
+                                                        '<button class="btn btn-warning btn-sm me-1 edit-btn" data-id="' + msg.idMessage + '">✏️</button>' +
+                                                        '<button class="btn btn-danger btn-sm delete-btn" data-id="' + msg.idMessage + '">🗑️</button>' +
+                                                    '</div>' : '') +
+                                                '</div>';
 
 
                     container.appendChild(item);
@@ -174,12 +176,14 @@
                             body: JSON.stringify({
                                 idMessage: parseInt(id),
                                 contenu: nouveau,
-                                time_: new Date().toLocaleTimeString("fr-FR", { hour12: false }),
+                                time_: null,
                                 nomUtilisateur: utilisateurConnecte,
                                 nomUtilisateur1: utilisateurConnecte,
                                 nomUtilisateur2: (from === utilisateurConnecte) ? to : from,
                                 nomCanal: null
                             })
+
+
                         }).then(res => {
                             if (res.ok) location.reload();
                             else alert("Erreur lors de la modification.");

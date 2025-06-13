@@ -74,7 +74,8 @@
                         item.innerHTML =
                             '<strong>' + (msg.nomUtilisateur || "Inconnu") + '</strong>' +
                             '<small class="text-muted float-end">' + dateAffichee + '</small><br>'  +
-                            (msg.contenu || "") +
+                            '<div id="contenu-' + msg.idMessage + '">' + (msg.contenu || "") + '</div>' +
+
                             '<div class="mt-2 reactions" id="reactions-' + msg.idMessage + '"></div>' +
                             '<div class="mt-2 d-flex justify-content-between">' +
                                 '<div>' +
