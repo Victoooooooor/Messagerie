@@ -1,8 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
     String contextPath = request.getContextPath();
-%>
-<%
     com.example.discord.model.Utilisateur utilisateur = (com.example.discord.model.Utilisateur) session.getAttribute("utilisateur");
     String utilisateurConnecte = utilisateur.getNomUtilisateur();
 %>
@@ -65,16 +63,25 @@
                     const item = document.createElement("div");
                     item.className = "list-group-item";
 
+                    const estAuteur = msg.nomUtilisateur === utilisateurConnecte;
+
                     item.innerHTML =
                         '<strong>' + (msg.nomUtilisateur || "Inconnu") + '</strong>' +
                         '<small class="text-muted float-end">' + (msg.time_ || "?") + '</small><br>' +
-                        (msg.contenu || "") +
-                        '<div class="mt-2 reactions" id="reactions-' + msg.idMessage + '"></div>' + // les réactions seront insérées ici
-                        '<div class="mt-2">' +
-                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="like">👍</button>' +
-                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="love">❤️</button>' +
-                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="funny">😂</button>' +
+                        '<div id="contenu-' + msg.idMessage + '">' + (msg.contenu || "") + '</div>' +
+                        '<div class="mt-2 reactions" id="reactions-' + msg.idMessage + '"></div>' +
+                        '<div class="mt-2 d-flex justify-content-between">' +
+                            '<div>' +
+                                '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="like">👍</button>' +
+                                '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="love">❤️</button>' +
+                                '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="funny">😂</button>' +
+                            '</div>' +
+                            (estAuteur ? '<div>' +
+                                '<button class="btn btn-warning btn-sm me-1 edit-btn" data-id="' + msg.idMessage + '">✏️</button>' +
+                                '<button class="btn btn-danger btn-sm delete-btn" data-id="' + msg.idMessage + '">🗑️</button>' +
+                            '</div>' : '') +
                         '</div>';
+
 
                     container.appendChild(item);
                     fetch(contextPath + "/reactions?idMessage=" + msg.idMessage)
@@ -135,6 +142,48 @@
                             });
                     });
                 });
+                // Suppression
+                document.querySelectorAll(".delete-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const id = btn.dataset.id;
+                        if (!confirm("Supprimer ce message ?")) return;
+                        fetch(contextPath + "/messages?id=" + id, {
+                            method: "DELETE"
+                        }).then(res => {
+                            if (res.status === 204) location.reload();
+                            else alert("Erreur lors de la suppression.");
+                        });
+                    });
+                });
+
+                // Modification
+                document.querySelectorAll(".edit-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const id = btn.dataset.id;
+                        const div = document.getElementById("contenu-" + id);
+                        const ancien = div.innerText;
+                        const nouveau = prompt("Nouveau message :", ancien);
+                        if (!nouveau) return;
+
+                        fetch(contextPath + "/messages", {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                idMessage: parseInt(id),
+                                contenu: nouveau,
+                                time_: new Date().toLocaleTimeString("fr-FR", { hour12: false }),
+                                nomUtilisateur: utilisateurConnecte,
+                                nomUtilisateur1: utilisateurConnecte,
+                                nomUtilisateur2: (from === utilisateurConnecte) ? to : from,
+                                nomCanal: null
+                            })
+                        }).then(res => {
+                            if (res.ok) location.reload();
+                            else alert("Erreur lors de la modification.");
+                        });
+                    });
+                });
+
                 document.getElementById("sendMessageBtn").addEventListener("click", () => {
                     const contenu = document.getElementById("messageInput").value.trim();
                     if (contenu === "") return;

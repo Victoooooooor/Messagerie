@@ -2,6 +2,7 @@ package com.example.discord.servlet;
 
 import com.example.discord.dao.CanalDAO;
 import com.example.discord.dao.MessageDAO;
+import com.example.discord.dao.ReactionDAO;
 import com.example.discord.model.Message;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.example.discord.model.Utilisateur;
@@ -160,29 +161,31 @@ public class MessageServlet extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.setContentType("application/json");
-        String idStr = req.getParameter("id");
-
-        if (idStr == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Paramètre 'id' manquant."));
-            return;
-        }
-
         try {
-            int id = Integer.parseInt(idStr);
-            boolean success = messageDAO.delete(id);
-            if (success) {
-                resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            } else {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                objectMapper.writeValue(resp.getWriter(), new ErrorResponse("Message non trouvé."));
+            String idParam = req.getParameter("id");
+            if (idParam == null) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "id manquant");
+                return;
             }
-        } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            objectMapper.writeValue(resp.getWriter(), new ErrorResponse("ID invalide : " + idStr));
+
+            int idMessage = Integer.parseInt(idParam);
+            ReactionDAO reactionDAO = new ReactionDAO();
+            reactionDAO.deleteByMessageId(idMessage); // Supprime les réactions d'abord
+
+            boolean deleted = messageDAO.delete(idMessage); // Puis supprime le message
+
+
+            if (deleted) {
+                resp.setStatus(HttpServletResponse.SC_NO_CONTENT); // 204 No Content
+            } else {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Message non trouvé");
+            }
+
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Erreur lors de la suppression : " + e.getMessage());
         }
     }
+
 
     static class ErrorResponse {
         public String error;

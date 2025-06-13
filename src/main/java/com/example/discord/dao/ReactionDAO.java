@@ -107,6 +107,23 @@ public class ReactionDAO {
         return reactions;
     }
 
+    public boolean deleteByMessageId(int idMessage) {
+        String sql = "DELETE FROM Reaction WHERE idMessage = ?";
+
+        try (Connection conn = ConnexionBD.getConnexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idMessage);
+            stmt.executeUpdate();
+            return true;
+
+        } catch (SQLException e) {
+            System.out.println("Erreur deleteByMessageId : " + e.getMessage());
+            return false;
+        }
+    }
+
+
     public String getExistingReactionType(String nomUtilisateur, int idMessage) {
         String sql = "SELECT typeReaction FROM Reaction WHERE nomUtilisateur = ? AND idMessage = ?";
         try (Connection conn = ConnexionBD.getConnexion();
