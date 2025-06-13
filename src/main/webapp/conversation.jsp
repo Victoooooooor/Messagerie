@@ -56,34 +56,41 @@
 
                 if (!messages || messages.length === 0) {
                     container.innerHTML = `<div class="text-muted text-center">Aucun message dans cette conversation.</div>`;
-                    return;
                 }
 
                 messages.forEach(msg => {
                     const item = document.createElement("div");
                     item.className = "list-group-item";
 
+
                     const estAuteur = msg.nomUtilisateur === utilisateurConnecte;
+
+                    const date = new Date(msg.time_);
+                    const dateAffichee = !isNaN(date.getTime()) ?
+                        new Intl.DateTimeFormat("fr-FR", {
+                            dateStyle: "short",
+                            timeStyle: "medium"
+                        }).format(date) : "?";
 
                     item.innerHTML =
                         '<strong>' + (msg.nomUtilisateur || "Inconnu") + '</strong>' +
-                        '<small class="text-muted float-end">' + (msg.time_ || "?") + '</small><br>' +
-                        '<div id="contenu-' + msg.idMessage + '">' + (msg.contenu || "") + '</div>' +
+                        '<small class="text-muted float-end">' + dateAffichee + '</small><br>' +
+                        (msg.contenu || "") +
                         '<div class="mt-2 reactions" id="reactions-' + msg.idMessage + '"></div>' +
-                        '<div class="mt-2 d-flex justify-content-between">' +
-                            '<div>' +
-                                '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="like">👍</button>' +
-                                '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="love">❤️</button>' +
-                                '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="funny">😂</button>' +
-                            '</div>' +
+                        '<div class="mt-2">' +
+                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="like">👍</button>' +
+                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="love">❤️</button>' +
+                        '<button class="btn btn-outline-secondary btn-sm me-1 reaction-btn" data-id="' + msg.idMessage + '" data-reaction="funny">😂</button>' +
+
+                        '</div>'+
                             (estAuteur ? '<div>' +
                                 '<button class="btn btn-warning btn-sm me-1 edit-btn" data-id="' + msg.idMessage + '">✏️</button>' +
                                 '<button class="btn btn-danger btn-sm delete-btn" data-id="' + msg.idMessage + '">🗑️</button>' +
-                            '</div>' : '') +
-                        '</div>';
+                            '</div>' : '') +;
 
 
                     container.appendChild(item);
+
                     fetch(contextPath + "/reactions?idMessage=" + msg.idMessage)
                         .then(response => response.json())
                         .then(reactions => {
@@ -100,7 +107,6 @@
                         });
                 });
 
-                // Ajout des listeners de réactions
                 document.querySelectorAll(".reaction-btn").forEach(btn => {
                     btn.addEventListener("click", () => {
                         const idMessage = btn.dataset.id;
@@ -116,16 +122,14 @@
                         })
                             .then(response => {
                                 if (!response.ok) throw new Error("Erreur lors de la réaction.");
-                                return response.text(); // Optionnel, ou .json() si tu veux retourner une info serveur
+                                return response.text();
                             })
                             .then(() => {
-                                // Recharge la liste des réactions pour ce message uniquement :
                                 fetch(contextPath + "/reactions?idMessage=" + idMessage)
                                     .then(response => response.json())
                                     .then(reactions => {
                                         const reactionsDiv = document.getElementById("reactions-" + idMessage);
-                                        reactionsDiv.innerHTML = ""; // reset
-
+                                        reactionsDiv.innerHTML = "";
                                         reactions.forEach(r => {
                                             const emoji = r.typeReaction === "like" ? "👍" :
                                                 r.typeReaction === "love" ? "❤️" :
@@ -137,11 +141,10 @@
                                         });
                                     });
                             })
-                            .catch(err => {
-                                alert("Erreur : " + err.message);
-                            });
+                            .catch(err => alert("Erreur : " + err.message));
                     });
                 });
+
                 // Suppression
                 document.querySelectorAll(".delete-btn").forEach(btn => {
                     btn.addEventListener("click", () => {
@@ -184,6 +187,7 @@
                     });
                 });
 
+
                 document.getElementById("sendMessageBtn").addEventListener("click", () => {
                     const contenu = document.getElementById("messageInput").value.trim();
                     if (contenu === "") return;
@@ -198,8 +202,7 @@
                             contenu: contenu,
                             nomCanal: null,
                             nomUtilisateur1: from,
-                            nomUtilisateur2: to,
-                            time_: new Date().toLocaleTimeString("fr-FR", { hour12: false })
+                            nomUtilisateur2: to
                         })
                     })
                         .then(response => {
@@ -208,15 +211,11 @@
                         })
                         .then(() => {
                             document.getElementById("messageInput").value = "";
-                            location.reload(); // ou appel dynamique si tu préfères sans reload
+                            location.reload();
                         })
-                        .catch(err => {
-                            alert("Erreur : " + err.message);
-                        });
+                        .catch(err => alert("Erreur : " + err.message));
                 });
             })
-
-
             .catch(error => {
                 const container = document.getElementById("messagesList");
                 container.innerHTML = `<div class="text-danger text-center">Erreur : ${error.message}</div>`;

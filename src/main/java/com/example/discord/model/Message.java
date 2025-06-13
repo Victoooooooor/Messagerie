@@ -1,11 +1,11 @@
 package com.example.discord.model;
 
-import java.sql.Time;
+import java.sql.Timestamp;
 
 public class Message {
     private int idMessage;
     private String contenu;
-    private Time time_;
+    private Timestamp time_;
     private String nomUtilisateur;
     private String nomCanal;
     private String nomUtilisateur1;
@@ -13,7 +13,7 @@ public class Message {
 
     public Message() {}
 
-    public Message(int idMessage, String contenu, Time time_, String nomUtilisateur, String nomCanal) {
+    public Message(int idMessage, String contenu, Timestamp time_, String nomUtilisateur, String nomCanal) {
         this.idMessage = idMessage;
         this.contenu = contenu;
         this.time_ = time_;
@@ -27,8 +27,12 @@ public class Message {
     public String getContenu() { return contenu; }
     public void setContenu(String contenu) { this.contenu = contenu; }
 
-    public Time getTime_() {return time_;}
-    public void setTime_(Time time_) {this.time_ = time_;}
+    public Timestamp getTime_() {
+        return time_;
+    }
+    public void setTime_(Timestamp time_) {
+        this.time_ = time_;
+    }
 
 
     public String getNomUtilisateur() { return nomUtilisateur; }
